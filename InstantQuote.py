@@ -1,3 +1,4 @@
+
 import time
 import logging
 from configobj import ConfigObj
@@ -14,8 +15,6 @@ class InstantQuote(object):
     """docstring for InstantQuote"""
     def __init__(self):
         super(InstantQuote, self).__init__()
-        #Selenium Webdriver object
-
 
         fp = webdriver.FirefoxProfile()
         fp.set_preference('webdriver.load.strategy', 'unstable')
@@ -37,6 +36,8 @@ class InstantQuote(object):
         self.driver.implicitly_wait(5) #time to keep searching for elements after ____
         self.driver.set_page_load_timeout(5)
         
+        # wait = WebDriverWait(self.driver, 5)
+
         #Logging
         self.log = logging.getLogger(__name__)
         # logging.basicConfig(level=logging.DEBUG)
@@ -74,7 +75,9 @@ class InstantQuote(object):
         # Create a list of open tabs and store their name, current progress, etc.
 
     def instantQuote(self, boardType='rigid'):
-        """Get instant quotes from all manufacturers that meet board specifications.
+        """
+        Get instant quotes from all manufacturers that meet board
+        specifications.
 
         :param boardType: 'rigid' or 'flex'
         """
@@ -114,23 +117,19 @@ class InstantQuote(object):
 
         finish = self.driver.find_element_by_id('appParam_%22FinishPlating%22').send_keys(self.brd['finish'])
         
-    # Developer comment
     def quoteOSHPark(self):
-        """docstring"""
-        url, name, pw = self.readConfig('oshpark', 'rigid')
+        """Function for navigating OSHPark's website."""
 
+        url, user, pw = self.readConfig('oshpark', 'rigid')
+        # Open new tab and go to URL
         self.newTab()
-
         self.driver.get(url)
-
-        userCSS = '#user_email'
-        user = self.driver.find_element_by_css_selector('#user_email')
-        user.send_keys(uname)
-
-        
-
+        # Enter login information
+        self.driver.find_element_by_css_selector('#user_email').send_keys(user)
         self.driver.find_element_by_css_selector('#user_password').send_keys(pw)
+        # Click login button
         self.driver.find_element_by_css_selector('.buttons > input:nth-child(1)').click()
+
         self.driver.find_element_by_css_selector('#ember291').click()
         self.driver.find_element_by_css_selector('#file_selector > input:nth-child(2)').click()
 
@@ -149,7 +148,6 @@ class InstantQuote(object):
         # pyautogui.typewrite(fileLocation)
         pyautogui.press('return')
 
-    # Developer comment
     def quoteSunstonePCBExpress(self):
         """docstring"""
         url, name, pw = self.readConfig('sunstone', 'rigid')
@@ -159,46 +157,163 @@ class InstantQuote(object):
         url, name, pw = self.readConfig('sunstone', 'rigid')
         self.newTab()
 
-        # attempts = 0
-        # while (attempts <= 30):
-        try:
-            # attempts += 1        
-            self.log.debug('Attempt #' + str(attempts) + '... trying to load ' + url)
-            self.driver.get(url)
-            # WebDriverWait(self.driver, 5).until(WebDriverWait.readystate_complete)
-            self.log.debug('Loaded.')
-        except TimeoutException, e:
-            self.log.debug('TimeoutException' + str(e))
+        while True:
+            try:
+                self.log.debug('Trying to load ' + url)
+                self.driver.get(url)
+                # WebDriverWait(self.driver, 5).until(EC.readystate_complete)
+                self.log.debug('Loaded.')
+            except TimeoutException, e:
+                self.log.debug('TimeoutException' + str(e))
+                continue
+            else:
+                break
 
-        # self.driver.find_element_by_id('.btn-blu').click()
         self.driver.find_element_by_css_selector('#ctl00_ctl00_cphSite_cphMain_txtEmail').send_keys(name)
         self.driver.find_element_by_css_selector('#ctl00_ctl00_cphSite_cphMain_txtPassword').send_keys(pw)
+
         self.driver.find_element_by_css_selector('#ctl00_ctl00_cphSite_cphMain_ibLogIn_Button').click()
         self.driver.find_element_by_css_selector('a.btn-grn:nth-child(2)').click()
         self.driver.find_element_by_css_selector('.mt-menu > li:nth-child(3) > a:nth-child(1)').click()
+
+        # while True:
+        #     try:
+        #         self.driver.find_element_by_css_selector('#ctl00_ctl00_cphSite_cphMain_ibLogIn_Button').click()
+        #     except TimeoutException, e:
+        #         self.log.debug('TimeoutException' + str(e))
+        #         continue
+        #     else:
+        #         break
+
+
+        # while True:
+        #     try:
+        #         self.driver.find_element_by_css_selector('a.btn-grn:nth-child(2)').click()
+        #     except TimeoutException, e:
+        #         self.log.debug('TimeoutException' + str(e))
+        #         continue
+        #     else:
+        #         break
+
+
+        # self.driver.find_element_by_css_selector('a.btn-grn:nth-child(2)').click()
+
+        # while True:
+        #     try:
+        #         self.driver.find_element_by_css_selector('.mt-menu > li:nth-child(3) > a:nth-child(1)').click()
+        #     except TimeoutException, e:
+        #         self.log.debug('TimeoutException' + str(e))
+        #         continue
+        #     else:
+        #         break
+        
         # a.btn-grn:nth-child(2)
         # self.driver.find_element_by_id('.mt-menu > li:nth-child(3) > a:nth-child(1)').click()        
 
     def quoteDirty(self):
         url, name, pw = self.readConfig('dirty', 'rigid')
-
         self.newTab()
-
         self.driver.get(url)
-        
-        
-        #(503) 906-8190
 
     def readConfig(self, company, boardType):
         try:
             url = self.user[boardType]['instant'][company]['url']
-            name = self.user[boardType]['instant'][company]['u']
+            user = self.user[boardType]['instant'][company]['u']
             pw = self.user[boardType]['instant'][company]['pw']
-            return url, name, pw
+            return url, user, pw
         except KeyError, value:
             self.log.error('Trying to read config file.')
-            self.log.error('Company: ' + company + ', boardType: ' + boardType)
+            self.log.error('Company: ' + company + \
+                    ', boardType: ' + boardType)
             self.log.error('KeyError: ' + str(value))
+
+class Board(object):
+    """
+    The Board class defines the minimum and maximum specifications of 
+    a printed circuit board design.
+
+    The specifications will be checked against the specifications in a
+    Process from a Manufacturer.
+    """
+    def __init(self, boardConfigFile):
+        # Board design information
+        self.brdName = None
+        self.brdRev = None #revision
+        self.brdAuthor = None #name of designer
+        self.brdLastEdited = None #date
+
+# Inherit object - search new style vs old style classes in python
+class Manufacturer(object):
+    """
+    Manufacturer class contains the basic information about a PCB
+    manufacturer. Each manufacturer offers different processes: instant
+    quotes, custom quotes, etc.
+
+    Parameters:
+        configFile - path to ConfigObj file
+    """
+
+    def __init__(self, mfrConfigFile):
+        # Manufacturer information
+        self.name = None
+        self.type = None #broker, mfr, etc.
+        self.location = None #onshore, offshore, etc.
+        self.email = None #contact email for custom quotes
+        self.subject = None #custom subject line for each mfr
+        self.message = None #custom message for each mfr
+        self.processes = [] #list of process objects
+        
+class Process(object):
+    """
+    A Manufacturer may have multiple processes that they offer.
+    e.g. 2-layer value boards, 4-layer custom quote, etc.
+    
+    The process class describes the capabilities of a process as well
+    as the instructions to complete an automated quote.
+
+    """
+    def __init__(self):
+        # Standard specifications
+        self.xDim = -1
+        self.yDim = -1
+        self.minTrace = -1
+        self.minSpace = -1
+        self.minDrillDiam = -1
+        self.minAnnularRing = -1
+        self.layer = []
+        self.thickness = []
+        self.outerCopperWeight = []
+        self.innerCopperWeight = []
+        self.finish = []
+        self.silk = []
+        self.silkColor = []
+        self.maskType = []
+        self.maskFinish = []
+        self.maskColor = []
+        self.spec = [] #IPC2, IPC3, MIL
+        self.material = []
+        
+        self.leadTime = [] #lead times
+        self.shipping = [] #shipping options
+
+        # Advanced specifications
+        self.tabRoute = None
+        self.cutouts = None
+        self.scoring = None
+        self.counterbore = None
+        self.countersink = None
+        self.controlledImpedance = None
+        self.controlledDielectric = None
+        self.bevels = None
+        self.platedEdges = None
+        self.platedSlots = None
+        self.blindBuriedVias = None
+        self.maxWarpTwist = None #percentage
+
+        # Extra options
+        self.electricalTest = None
+        self.stencil = []
+        self.coupon = []
 
 
 if __name__ == '__main__':
