@@ -227,15 +227,6 @@ class InstantQuote(object):
                     ', boardType: ' + boardType)
             self.log.error('KeyError: ' + str(value))
 
-class Action(object):
-    def __init__(self):
-        pass
-
-    def click(self, driver):
-        pass
-
-    def type(self, driver, string):
-        pass
 
 class Automator(object):
     """
