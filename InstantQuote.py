@@ -163,7 +163,7 @@ class InstantQuote(object):
                 self.driver.get(url)
                 # WebDriverWait(self.driver, 5).until(EC.readystate_complete)
                 self.log.debug('Loaded.')
-            except TimeoutException, e:
+            except TimeoutException as e:
                 self.log.debug('TimeoutException' + str(e))
                 continue
             else:
@@ -221,47 +221,106 @@ class InstantQuote(object):
             user = self.user[boardType]['instant'][company]['u']
             pw = self.user[boardType]['instant'][company]['pw']
             return url, user, pw
-        except KeyError, value:
+        except KeyError as value:
             self.log.error('Trying to read config file.')
             self.log.error('Company: ' + company + \
                     ', boardType: ' + boardType)
             self.log.error('KeyError: ' + str(value))
 
+class Action(object):
+    def __init__(self):
+        pass
+
+    def click(self, driver):
+        pass
+
+    def type(self, driver, string):
+        pass
+
+class Automator(object):
+    """
+
+    """
+    def __init__(self):
+        self.validProcesses = []
+
 class Board(object):
     """
-    The Board class defines the minimum and maximum specifications of 
-    a printed circuit board design.
-
-    The specifications will be checked against the specifications in a
-    Process from a Manufacturer.
+    The Board class contains information about a printed circuit board
+    including the name, author, revision, and specifications that the
+    board must meet.
     """
-    def __init(self, boardConfigFile):
-        # Board design information
-        self.brdName = None
-        self.brdRev = None #revision
-        self.brdAuthor = None #name of designer
-        self.brdLastEdited = None #date
+    def __init(self, boardPath):
+        # Design information
+        self.name = None
+        self.rev = None #revision
+        self.author = None #name of designer
+        self.lastEdited = None #date
+        self.spec = Specification(boardPath)
 
-# Inherit object - search new style vs old style classes in python
+    def load(configFile):
+        pass
+
+class InstantQuote(object):
+    """
+    A Process has an InstantQuote object. InstantQuotes contain a list
+    of Elements.
+    """
+    def __init__(self, path):
+        with open(path, 'r') as f:
+            self.elements = yaml.load(f)
+
+    def execute(self):
+        #for each item in yaml, get element from type/id and do the actions
+        pass
+
+
+# When defining a class in Python2, you must inherit "object"
+# ...search new style vs old style classes in Python
 class Manufacturer(object):
     """
-    Manufacturer class contains the basic information about a PCB
-    manufacturer. Each manufacturer offers different processes: instant
-    quotes, custom quotes, etc.
+    The Manufacturer class contains the basic information about a PCB
+    manufacturer. Each Manufacturer may have multiple Processes.
 
     Parameters:
         configFile - path to ConfigObj file
     """
 
-    def __init__(self, mfrConfigFile):
+    def __init__(self, mfrPath):
         # Manufacturer information
         self.name = None
-        self.type = None #broker, mfr, etc.
-        self.location = None #onshore, offshore, etc.
+        self.type = None #broker, mfr, batch service, etc.
+        self.city = None
+        self.country = None
+        self.processes = [] #list of processes
+
+        #TODO
+        # Information for custom quoting via email
         self.email = None #contact email for custom quotes
         self.subject = None #custom subject line for each mfr
         self.message = None #custom message for each mfr
-        self.processes = [] #list of process objects
+
+    def load(configFile):
+        pass
+
+class Matchmaker(object):
+    """
+    The Matchmaker class asserts the following: (in order)
+    1. QUOTE <-> MFERS
+        -assert location
+    2. QUOTE <-> PROCESS
+        -of valid mfers:
+            -assert quantities and lead times are available
+    3. BOARD <-> PROCESS
+        -of available processes:
+            -assert Board.spec meets Process.spec
+    """
+    def __init__(self):
+        pass
+
+    def match(quote):
+        #return list of valid processes
+        pass
         
 class Process(object):
     """
@@ -272,48 +331,112 @@ class Process(object):
     as the instructions to complete an automated quote.
 
     """
+    def __init__(self, processPath, instantQuotePath):
+        # Process information
+        self.mfr = None #Manufacturer name
+        self.name = None #ValueProto, QuickTurn, etc.
+        self.spec = Specification(processPath)
+        self.instantQuote = InstantQuote(instantQuotePath)
+
+        # Process options
+        self.quantities = []
+        self.leadTimes = []
+        self.shipping = [] #shipping options
+        self.coupons = []
+
+    def instantQuote(self):
+
+        pass
+
+
+
+    def load(configFile):
+        pass
+
+    def 
+
+class Quote(object):
+    def __init__(self):
+        # Quote information
+        self.user = None
+        self.name = None #name given by user
+        self.options = None #secondary name option for user
+        self.id = -1 #quote id number
+        self.board = Board()
+
+        # Requirements
+        self.quantities = []
+        self.leadTimes = []
+        self.shipping = []
+        self.countryRestrictions = []
+        self.cityRestrictions = []
+
+        #TODO
+        self.stencil = []
+
+class Specification(object):
     def __init__(self):
         # Standard specifications
-        self.xDim = -1
-        self.yDim = -1
-        self.minTrace = -1
-        self.minSpace = -1
-        self.minDrillDiam = -1
-        self.minAnnularRing = -1
-        self.layer = []
+        self.x = -1
+        self.y = -1
+        self.layers = []
+        self.trace = -1
+        self.space = -1
+        self.drill = -1
+        self.annularRing = -1
         self.thickness = []
-        self.outerCopperWeight = []
-        self.innerCopperWeight = []
+        self.drillAspectRatio = -1
+        self.outerCopper = []
+        self.innerCopper = []
         self.finish = []
         self.silk = []
         self.silkColor = []
         self.maskType = []
         self.maskFinish = []
         self.maskColor = []
-        self.spec = [] #IPC2, IPC3, MIL
         self.material = []
-        
-        self.leadTime = [] #lead times
-        self.shipping = [] #shipping options
-
+        self.standard = [] #IPC2, IPC3, MIL
+                
         # Advanced specifications
+        self.electricalTest = None
         self.tabRoute = None
-        self.cutouts = None
-        self.scoring = None
+        self.cutout = None
+        self.score = None
         self.counterbore = None
         self.countersink = None
         self.controlledImpedance = None
         self.controlledDielectric = None
-        self.bevels = None
-        self.platedEdges = None
-        self.platedSlots = None
-        self.blindBuriedVias = None
+        self.bevel = None
+        self.platedEdge = None
+        self.platedSlot = None
+        self.viaBlindBuried = None
         self.maxWarpTwist = None #percentage
 
-        # Extra options
-        self.electricalTest = None
-        self.stencil = []
-        self.coupon = []
+    def printTemplate(self):
+        cfg = ConfigObj()
+        cfg.filename = 'blankSpec.cfg'
+        # OR USE YAML
+
+
+        # In Python3, an OrderedMeta (metaclass) can be used to return
+        # a list of the variables in order.
+
+        # for var in vars(self):
+        #     print 'var string', var
+        
+        # members = [attr for attr in dir(self) if not callable(attr) and not attr.startswith("__")]
+        # print 'members', members
+
+
+
+
+
+
+
+    
+    
+
+
 
 
 if __name__ == '__main__':
