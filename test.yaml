@@ -1,0 +1,22 @@
+# EPEC Process: InstantQuote
+# (Selenium webdriver elements)
+- step1:
+    name: x
+    type: css
+    id: appParam_%22XDimension%22
+    actions: [click, spec, tab]
+- step2:
+    name: y
+    type: css
+    id: appParam_%22YDimension%22
+    actions: [click, spec, tab]
+- step3:
+    name: layer
+    type: css
+    id: appParam_%22LayerCount%22
+    actions: [spec, tab]
+- step4: 
+    name: clickOnSomeShit
+    type: navBox
+    id: popUp
+    actions: [click]
